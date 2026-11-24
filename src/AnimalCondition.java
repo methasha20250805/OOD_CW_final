@@ -1,0 +1,1 @@
+public enum AnimalCondition { INJURED, TRAPPED, DISPLACED, ABANDONED }
