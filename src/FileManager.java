@@ -17,6 +17,7 @@ public class FileManager {
     private static final String ASSIGNMENT_HEADER =
             "assignmentId,incidentId,teamId,assignedAt,completedAt";
 
+//Loading the data
     public synchronized List<RescueIncident> loadIncidents()
             throws FileOperationException, InvalidIncidentDataException {
         List<RescueIncident> list = new ArrayList<>();
@@ -70,6 +71,7 @@ public class FileManager {
         return list;
     }
 
+    //Saving the data
     public synchronized void saveIncident(RescueIncident incident) throws FileOperationException {
         appendLine(incidentsFile, INCIDENT_HEADER, incidentToCsv(incident));
     }
@@ -92,7 +94,7 @@ public class FileManager {
         upsertLine(assignmentsFile, ASSIGNMENT_HEADER, assignment.getAssignmentId(), line);
     }
 
-
+//Convert the lists to CSV files
     private String incidentToCsv(RescueIncident i) {
         return String.join(",",
                 i.getIncidentId(),
