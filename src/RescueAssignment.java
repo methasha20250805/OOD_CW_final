@@ -9,7 +9,7 @@ public class RescueAssignment {
     private RescueTeam team;
 
     public RescueAssignment(RescueIncident incident, RescueTeam team) {
-        this.assignmentId = "ASG-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        this.assignmentId = "ASSIGNMENT -" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         this.incident = incident;
         this.team = team;
         this.assignedAt = LocalDateTime.now();
