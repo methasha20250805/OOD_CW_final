@@ -1,4 +1,3 @@
-// FILE: FileManager.java
 import java.io.*;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -67,6 +66,50 @@ public class FileManager {
             }
         } catch (IOException e) {
             throw new FileOperationException("Could not read " + teamsFile + ": " + e.getMessage());
+        }
+        return list;
+    }
+    public synchronized List<RescueAssignment> loadAssignments(List<RescueIncident> incidents,
+                                                               List<RescueTeam> teams)
+            throws FileOperationException {
+        List<RescueAssignment> list = new ArrayList<>();
+        File file = new File(assignmentsFile);
+        if (!file.exists()) {
+            return list;
+        }
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            int lineNo = 0;
+            while ((line = br.readLine()) != null) {
+                lineNo++;
+                if (line.trim().isEmpty() || line.startsWith("assignmentId")) {
+                    continue;
+                }
+                String[] p = line.split(",", -1);
+                try {
+                    if (p.length != 5) {
+                        throw new IllegalArgumentException("expected 5 columns but found " + p.length);
+                    }
+                    RescueIncident incident = null;
+                    for (RescueIncident i : incidents) {
+                        if (i.getIncidentId().equals(p[1].trim())) incident = i;
+                    }
+                    RescueTeam team = null;
+                    for (RescueTeam t : teams) {
+                        if (t.getTeamId().equals(p[2].trim())) team = t;
+                    }
+                    if (incident == null || team == null) {
+                        throw new IllegalArgumentException("incident or team not found");
+                    }
+                    LocalDateTime completed = p[4].trim().isEmpty() ? null : LocalDateTime.parse(p[4].trim());
+                    list.add(new RescueAssignment(p[0].trim(), incident, team,
+                            LocalDateTime.parse(p[3].trim()), completed));
+                } catch (IllegalArgumentException | java.time.DateTimeException e) {
+                    System.out.println("Skipping " + assignmentsFile + " line " + lineNo + ": " + e.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            throw new FileOperationException("Could not read " + assignmentsFile + ": " + e.getMessage());
         }
         return list;
     }
@@ -239,6 +282,35 @@ public class FileManager {
             pw.println(line);
         } catch (IOException e) {
             throw new FileOperationException("Could not write to " + fileName + ": " + e.getMessage());
+        }
+    }
+    public synchronized void deleteTeam(String teamId) throws FileOperationException {
+        deleteLine(teamsFile, teamId);
+    }
+
+    // removes the line that starts with the given key; does nothing if not found
+    private void deleteLine(String fileName, String key) throws FileOperationException {
+        List<String> lines = new ArrayList<>();
+        File file = new File(fileName);
+        if (!file.exists()) {
+            return;
+        }
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (!line.trim().isEmpty() && !line.startsWith(key + ",")) {
+                    lines.add(line);
+                }
+            }
+        } catch (IOException e) {
+            throw new FileOperationException("Could not read " + fileName + ": " + e.getMessage());
+        }
+        try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
+            for (String l : lines) {
+                pw.println(l);
+            }
+        } catch (IOException e) {
+            throw new FileOperationException("Could not update " + fileName + ": " + e.getMessage());
         }
     }
 
